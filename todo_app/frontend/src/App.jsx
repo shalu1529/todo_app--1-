@@ -145,12 +145,21 @@ useEffect(() => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-10">
-          <h1 className="text-4xl font-extrabold text-blue-700 flex items-center gap-2">
-            ✅ Task Manager
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text flex items-center gap-2">
+            TODO APP
           </h1>
           <div className="flex justify-between items-center">
             <p className="text-gray-600">Stay organized and get things done</p>
-            
+            <button 
+              onClick={() => {
+                fetch('/api/test-notification', { method: 'POST' })
+                  .then(res => console.log('Test notification sent'))
+                  .catch(err => console.error('Error sending test notification:', err));
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+            >
+              Test Notification
+            </button>
           </div>
         </header>
 
@@ -252,3 +261,4 @@ const StatCard = ({ title, value, icon, color }) => (
 );
 
 export default App;
+
