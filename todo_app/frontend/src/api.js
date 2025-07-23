@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://todo-app-1-oxhe.onrender.com', // Change this when hosted
+  baseURL: 'https://todo-app-1-oxhe.onrender.com/api', // Change this when hosted
 });
 
 // GET all tasks
