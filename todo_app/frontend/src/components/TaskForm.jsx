@@ -18,7 +18,7 @@ const TaskForm = ({ onSave, selectedTask }) => {
       });
     }
   }, [selectedTask]);
- // Handle form submission
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -56,7 +56,7 @@ const TaskForm = ({ onSave, selectedTask }) => {
           placeholder="Add details about the task"
         />
       </div>
-{/* Due date input */}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block mb-1 text-gray-700 font-medium">Due Date</label>
@@ -69,7 +69,7 @@ const TaskForm = ({ onSave, selectedTask }) => {
             required
           />
         </div>
-{/* Priority dropdown with visual indicators */}
+
         <div>
           <label className="block mb-1 text-gray-700 font-medium">Priority</label>
           <select
@@ -84,10 +84,10 @@ const TaskForm = ({ onSave, selectedTask }) => {
           </select>
         </div>
       </div>
-{/* Submit button - shows different text based on whether editing or creating */}
+
       <button
         type="submit"
-        className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+        className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text py-2 rounded-lg font-medium  transition"
       >
         {selectedTask ? 'Update Task' : 'Create Task'}
       </button>
