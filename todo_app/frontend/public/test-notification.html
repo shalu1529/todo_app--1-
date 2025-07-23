@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Notifications</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 10px 2px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .log {
+      background-color: #f1f1f1;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 20px;
+      height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test Push Notifications</h1>
+  <p>Use this page to test if push notifications are working correctly.</p>
+  
+  <button id="requestPermission">Request Permission</button>
+  <button id="registerSW">Register Service Worker</button>
+  <button id="subscribe">Subscribe to Notifications</button>
+  <button id="testNotification">Send Test Notification</button>
+  
+  <div class="log" id="log"></div>
+  
+  <script>
+    const logElement = document.getElementById('log');
+    
+    function log(message) {
+      const entry = document.createElement('div');
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      logElement.appendChild(entry);
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    // Request notification permission
+    document.getElementById('requestPermission').addEventListener('click', async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        log(`Notification permission: ${permission}`);
+      } catch (error) {
+        log(`Error requesting permission: ${error}`);
+      }
+    });
+    
+    // Register service worker
+    document.getElementById('registerSW').addEventListener('click', async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.register('/service-worker.js');
+          log(`Service worker registered with scope: ${registration.scope}`);
+        } catch (error) {
+          log(`Service worker registration failed: ${error}`);
+        }
+      } else {
+        log('Service workers not supported');
+      }
+    });
+    
+    // Function to convert base64 to Uint8Array
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+    
+    // Subscribe to push notifications
+    document.getElementById('subscribe').addEventListener('click', async () => {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        log('Push notifications not supported');
+        return;
+      }
+      
+      try {
+        // Get VAPID public key
+        const response = await fetch('/api/vapid-public-key');
+        const data = await response.json();
+        const publicKey = data.publicKey;
+        
+        log(`Got public key: ${publicKey}`);
+        
+        // Wait for service worker to be ready
+        const registration = await navigator.serviceWorker.ready;
+        log('Service worker ready');
+        
+        // Subscribe
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+        
+        log('Created push subscription');
+        
+        // Send to server
+        const subscribeResponse = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(subscription)
+        });
+        
+        if (subscribeResponse.ok) {
+          log('Subscription sent to server successfully');
+        } else {
+          log('Failed to send subscription to server');
+        }
+      } catch (error) {
+        log(`Error subscribing: ${error}`);
+      }
+    });
+    
+    // Test notification
+    document.getElementById('testNotification').addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/test-notification', {
+          method: 'POST'
+        });
+        
+        if (response.ok) {
+          log('Test notification sent');
+        } else {
+          log('Failed to send test notification');
+        }
+      } catch (error) {
+        log(`Error sending test notification: ${error}`);
+      }
+    });
+    
+    // Listen for messages from service worker
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data && event.data.type) {
+        log(`Received message from service worker: ${event.data.type}`);
+      }
+    });
+    
+    // Check initial state
+    window.addEventListener('load', () => {
+      log(`Current notification permission: ${Notification.permission}`);
+      
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        log(`Found ${registrations.length} service worker registrations`);
+      });
+    });
+  </script>
+</body>
+</html>
